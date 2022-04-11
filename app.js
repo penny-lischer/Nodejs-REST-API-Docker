@@ -1,26 +1,30 @@
-const express = require('express');
-const createError = require('http-errors');
-const dotenv = require('dotenv').config();
+import express  from 'express';
+import ip  from 'ip';
+import createError from 'http-errors';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import Response from './domain/response.js';
+import productRoutes from './routes/product.route.js'
 
+dotenv.config();
+const PORT = process.env.PORT || 3000;
 const app = express();
 
+app.use(cors({ origin: '*' }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
 
 // Initialize DB
-require('./initDB')();
-
-const ProductRoute = require('./Routes/Product.route');
-app.use('/products', ProductRoute);
+app.use('/products', productRoutes);
+app.get('/', (req,res) => res.send(new Response(200, 'OK', 'Product API - All Good')));
+app.get('*', (req,res) => res.send(new Response(500, 'BAD REQUEST', 'ProRoute does not exist')));
+// console.log(process.env);
+app.listen(PORT, () => {
+  console.log('Server running on port ' + PORT + '...');
+});
 
 //404 handler and pass to error handler
 app.use((req, res, next) => {
-  /*
-  const err = new Error('Not found');
-  err.status = 404;
-  next(err);
-  */
-  // You can use the above code if your not using the http-errors module
   next(createError(404, 'Not found'));
 });
 
@@ -35,8 +39,4 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log('Server started on port ' + PORT + '...');
-});
